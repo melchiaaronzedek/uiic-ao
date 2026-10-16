@@ -67,3 +67,5 @@ mark{background:rgba(255,214,10,.35);color:inherit;border-radius:4px;padding:0 3
 .mth-n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;font-size:15px}
 .mth-t{font-size:calc(16px*var(--rs,1));line-height:1.45;font-weight:560}
 .mth-note{margin:10px 0 0;font-size:14px;color:var(--ink-3)}
+.fxc code.fxm{font-family:'STIX Two Math','Cambria Math','Latin Modern Math','Times New Roman',serif;font-size:calc(19px*var(--rs,1));white-space:pre-wrap}
+.fxc code.fxm .fr{font-size:.95em}

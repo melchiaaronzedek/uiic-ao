@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
 var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "d96b7e2c5d";
+var VER = "c5ceb85e6e";
 var BRAND = "UIIC AO Compass";
 
 /* ── helpers ── */
@@ -384,7 +384,7 @@ function nb(b) {
       (b.lines || []).map(function (x) { return '<div><b>' + h(x.l) + '</b><span>' + h(x.t) + '</span></div>'; }).join("") + '</div>' + (b.note ? '<p class="mn-n">' + h(b.note) + '</p>' : '') + '</div>';
     case "callout": var tone = { remember: "Remember", tip: "Tip", trap: "Trap", story: "The story" }[b.tone] || "Note", cb = hx(b.body);
       return '<div class="nb nb-co co-' + h(b.tone || "remember") + (cb.hot ? ' has-hot' : '') + '"><span class="co-k">' + h(b.title || tone) + '</span><p>' + cb.t + '</p></div>';
-    case "formula": out = '<div class="fxg">' + (b.items || []).map(function (f) { return '<div class="fxc"><code>' + h(f.f) + '</code>' + (f.note ? '<span>' + h(f.note) + '</span>' : '') + '</div>'; }).join("") + '</div>'; break;
+    case "formula": out = '<div class="fxg">' + (b.items || []).map(function (f) { return '<div class="fxc"><code class="fxm">' + mx(f.f) + '</code>' + (f.note ? '<span>' + mx(f.note) + '</span>' : '') + '</div>'; }).join("") + '</div>'; break;
     case "fig": return '<figure class="nb nb-fig">' + (b.title ? '<h4 class="nb-t">' + h(b.title) + '</h4>' : '') + '<div class="fig-s">' + svgSafe(b.svg) + '</div>' + (b.cap ? '<figcaption>' + hx(b.cap).t + '</figcaption>' : '') + '</figure>';
     case "solve": return solveHTML(b);
     case "work": return workHTML(b);
