@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
 var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "9be2dda706";
+var VER = "8eaa1f378f";
 var BRAND = "UIIC AO Compass";
 
 /* ── helpers ── */
@@ -150,7 +150,7 @@ function stemHTML(q) { return '<p>' + h(q.q).replace(/\n/g, "<br>") + '</p>'; }
 function optHTML(o) { return h(o); }
 function srcLabel(q) { return q.src || ""; }
 function srcChip(q) {
-  if (q.kind === "pyq") return ' <span class="pyq" title="Asked in an insurance AO exam (memory-based)">' + h(q.src) + '</span>';
+  if (q.kind === "pyq") return ' <span class="pyq' + (/UIIC/.test(q.src || "") ? ' y26' : '') + '" title="Asked in an insurance AO exam (memory-based)">' + h(q.src) + '</span>';
   return '';
 }
 
@@ -346,17 +346,18 @@ function examHall(cfg) {
 }
 
 /* ══════════ notes ══════════ */
-var PYQ_RE = /\s*((?:\{PYQ(?: [\d, ]+)?\}\s*)+)$/;
+var PYQ_RE = /\s*((?:\{(?:PYQ|UIIC)(?: [\d, ]+)?\}\s*)+)$/;
 function hx(s) {
   s = s == null ? "" : String(s);
   var m = s.match(PYQ_RE);
   if (!m) return { t: h(s), hot: false };
-  var tags = "", re = /\{PYQ(?: ([\d, ]+))?\}/g, x;
+  var tags = "", re = /\{(PYQ|UIIC)(?: ([\d, ]+))?\}/g, x, uiic = false;
   while ((x = re.exec(m[1]))) {
-    var ys = x[1] ? x[1].split(/,\s*/).filter(Boolean) : [];
+    var ys = x[2] ? x[2].split(/,\s*/).filter(Boolean) : [];
+    if (x[1] === "UIIC") { uiic = true; tags += ' <span class="pyq y26" title="Asked in UIIC AO' + (ys.length ? ": " + ys.join(", ") : "") + '">UIIC' + (ys.length ? " " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "") + '</span>'; continue; }
     tags += ' <span class="pyq" title="Asked in UIIC, NIACL or NICL AO' + (ys.length ? ": " + ys.join(", ") : "") + '">' + (ys.length ? "Asked " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "Asked") + '</span>';
   }
-  return { t: h(s.replace(PYQ_RE, "")) + tags, hot: true };
+  return { t: h(s.replace(PYQ_RE, "")) + tags, hot: true, uiic: uiic };
 }
 function nb(b) {
   var t = b.title || b.imp ? '<h4 class="nb-t">' + (b.imp ? '<span class="mr">Must read</span>' : '') + h(b.title || "") + '</h4>' : '';
@@ -430,7 +431,7 @@ function solveHTML(b) {
   var ok = o.findIndex ? o.findIndex(function (x) { return String(x).trim() === a; }) : -1;
   var pyq = b.src && !/^practice/i.test(b.src);
   return (b.title ? '<h4 class="nb-t sol-g">' + h(b.title) + '</h4>' : '') + '<div class="nb nb-sol has-hot">' +
-    '<div class="sol-h"><span class="sol-k">' + (pyq ? "Solved PYQ" : "Worked example") + '</span>' + (pyq ? '<span class="pyq">' + h(b.src) + '</span>' : '') + '</div>' +
+    '<div class="sol-h"><span class="sol-k">' + (pyq ? "Solved PYQ" : "Worked example") + '</span>' + (pyq ? '<span class="pyq' + (/UIIC/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' +
     '<p class="sol-q">' + h(b.q) + '</p>' + (b.svg ? '<div class="fig-s sol-fig">' + svgSafe(b.svg) + '</div>' : '') +
     (o.length ? '<ol class="sol-o">' + o.map(function (x, i) { return '<li' + (i === ok ? ' class="ok"' : '') + '><b>' + L[i] + '</b><span>' + h(x) + '</span></li>'; }).join("") + '</ol>' : '') +
     '<details class="sol-d"><summary><span>Show the full solution</span></summary><ol class="sol-st">' + (b.steps || []).map(function (x) { return '<li>' + h(x) + '</li>'; }).join("") + '</ol>' +
@@ -452,13 +453,13 @@ function notesV4(N) {
     '<div class="nv-chs">' + C.map(function (c, i) {
       return '<article class="nch' + (/\{PYQ|"type":"solve"/.test(JSON.stringify(c.blocks || [])) ? ' has-hot' : '') + '" id="nch-' + i + '"><header><span class="nch-n">Chapter ' + (i + 1) + (YLD[c.yield] ? '<em class="yl yl-' + (c.yield === "med" ? "medium" : c.yield) + '">' + YLD[c.yield] + '</em>' : '') + '</span><h3>' + h(c.h) + '</h3></header>' +
         (c.intro ? '<p class="nch-in">' + h(c.intro) + '</p>' : '') + (c.blocks || []).map(nb).join("") + '</article>'; }).join("") + '</div></div>';
-  var CS = JSON.stringify(C), hot1 = (CS.match(/\{PYQ/g) || []).length, hot = hot1 + (CS.match(/"type":"solve"/g) || []).length, nimp = (CS.match(/"imp":true/g) || []).length;
+  var CS = JSON.stringify(C), hot1 = (CS.match(/\{(PYQ|UIIC)/g) || []).length, nu = (CS.match(/\{UIIC/g) || []).length + (CS.match(/"src":"[^"]*UIIC/g) || []).length, hot = hot1 + (CS.match(/"type":"solve"/g) || []).length, nimp = (CS.match(/"imp":true/g) || []).length;
   var mode = noteMode === "recap" ? "recap" : "full";
-  var L = [["", "All notes"]].concat(hot ? [["asked", "Asked in AO papers"]] : [], nimp ? [["imp", "Must read · " + nimp]] : []);
+  var L = [["", "All notes"]].concat(nu ? [["y26", "Asked in UIIC · " + nu]] : [], hot ? [["asked", "Asked in AO papers"]] : [], nimp ? [["imp", "Must read · " + nimp]] : []);
   var lens = L.some(function (x) { return x[0] === noteLens; }) ? noteLens : "";
   return '<div class="nv" data-mode="' + mode + '" data-lens="' + lens + '" data-toc="' + (tocOff ? "off" : "on") + '">' +
     (L.length > 1 ? '<div class="nv-lens"><span class="nv-lk">' + (hot1 ? '<span class="pyq">Asked</span> ' + hot1 + ' lines asked in insurance AO papers' : 'Solved questions in the chapters') + '</span>' +
-      '<div class="nv-lseg" role="radiogroup" aria-label="Show">' + L.map(function (x) { return '<button role="radio" data-lens="' + x[0] + '" aria-checked="' + (x[0] === lens) + '"' + (x[0] === "imp" ? ' class="limp"' : '') + '>' + h(x[1]) + '</button>'; }).join("") + '</div></div>' : '') +
+      '<div class="nv-lseg" role="radiogroup" aria-label="Show">' + L.map(function (x) { return '<button role="radio" data-lens="' + x[0] + '" aria-checked="' + (x[0] === lens) + '"' + (x[0] === "imp" ? ' class="limp"' : x[0] === "y26" ? ' class="l26"' : '') + '>' + h(x[1]) + '</button>'; }).join("") + '</div></div>' : '') +
     '<div class="nv-seg" role="tablist" aria-label="Notes view" style="--n:2"><button role="tab" data-nm="recap" aria-selected="' + (mode === "recap") + '">Recap <small>' + (R.lines || []).length + ' lines</small></button>' +
       '<button role="tab" data-nm="full" aria-selected="' + (mode === "full") + '">Complete notes <small>' + C.length + ' chapters</small></button><i aria-hidden="true"></i></div>' +
     '<div class="nv-body">' + recap + full + '</div></div>';
@@ -467,6 +468,12 @@ function wireNotes() {
   var nv = el(".nv"); if (!nv) return;
   els("[data-toct]", nv).forEach(function (b) { b.addEventListener("click", function () { tocOff = !tocOff; nv.dataset.toc = tocOff ? "off" : "on"; lsSet("uc-toc", tocOff ? "off" : "on"); }); });
   els(".nv-chs .nb.imp", nv).forEach(function (b) { var c = b.closest(".nch"); if (c) c.classList.add("hasimp"); });
+  // what UIIC itself asked: the "Asked in UIIC" view keeps just those lines, blocks and chapters
+  els(".nv-chs .pyq.y26", nv).forEach(function (p) {
+    var line = p.closest(".pts li, tr, .np > div, .nb-tl li, .chn-r, .nb-co, .nb-sol, .nb-text p"); if (line) line.classList.add("y26");
+    var b = p.closest(".nb"); if (b) b.classList.add("has26");
+    var c = p.closest(".nch"); if (c) c.classList.add("has26");
+  });
   els("[data-lens]", el(".nv-lens", nv) || nv).forEach(function (b) { if (b === nv) return; b.addEventListener("click", function () {
     noteLens = b.dataset.lens; nv.dataset.lens = noteLens;
     els(".nv-lseg [data-lens]", nv).forEach(function (x) { x.setAttribute("aria-checked", String(x === b)); });
@@ -611,11 +618,11 @@ V["learn"] = function (sk, topic) {
         '<span class="muted reveal">' + title + ' · ' + done + ' of ' + x.topics.length + ' read</span></div>' +
         (x.official ? '<details class="offic reveal"><summary>Official syllabus wording</summary><p>' + h(x.official) + '</p></details>' : '') +
         '<div class="tgrid">' + x.topics.map(function (t) {
-          var N = D.notes[tkey(x.k, t.n)], qs = topicQs(x.k, t.n), st = statOf(qs), asked = N ? (JSON.stringify(N).match(/\{PYQ/g) || []).length : 0;
+          var N = D.notes[tkey(x.k, t.n)], qs = topicQs(x.k, t.n), st = statOf(qs), NS = N ? JSON.stringify(N) : "", asked = (NS.match(/\{(PYQ|UIIC)/g) || []).length, uq = (NS.match(/\{UIIC/g) || []).length + qs.filter(function (q) { return /UIIC/.test(q.src || ""); }).length;
           return '<a class="tcard reveal' + (learned(x.k, t.n) ? " done" : "") + '" href="' + learnHref(x.k, t.n) + '" data-tn="' + h((t.n + " " + x.name).toLowerCase()) + '" data-ts="' + x.k + '"' + (learned(x.k, t.n) ? ' data-tl="1"' : '') + '>' +
             '<span class="tc-top"><span class="tc-w">' + (N ? '<b>' + (N.chapters || []).length + '</b> chapters' : 'Notes coming') + '</span>' +
               (learned(x.k, t.n) ? '<span class="tag key">Read</span>' : asked ? '<span class="tag">Asked ×' + asked + '</span>' : '') + '</span>' +
-            '<span class="tc-t">' + h(t.n) + '</span>' +
+            '<span class="tc-t">' + h(t.n) + (uq ? ' <span class="pyq y26" title="Asked in UIIC AO papers">UIIC · ' + uq + '</span>' : '') + '</span>' +
             '<span class="tc-bar"><i style="--p:' + (st.n ? Math.max(0.04, st.done / st.n) : 0) + '"></i></span>' +
             '<span class="tc-d">' + st.n + ' question' + (st.n === 1 ? '' : 's') + (st.done ? ' · ' + st.done + ' done' : '') + '</span></a>';
         }).join("") + '</div></section>';
@@ -708,20 +715,21 @@ function orderQs(qs) {
   return qs.map(function (q, i) { return [q, i]; }).sort(function (a, b) { return (rank[a[0].kind] || 3) - (rank[b[0].kind] || 3) || (b[0].y || 0) - (a[0].y || 0) || a[1] - b[1]; }).map(function (x) { return x[0]; });
 }
 V["practice"] = function (sk, topic) {
-  if (sk && (topic || sk === "pyq")) {
+  if (sk && (topic || sk === "pyq" || sk === "uiic")) {
     var t = topic ? decodeURIComponent(topic) : "", qs, label;
     if (sk === "pyq") { qs = D.qs.filter(function (q) { return q.kind === "pyq" && (!t || q.s === t); }); label = "Every past insurance AO question" + (t ? ", " + secOf(t).short : ""); }
+    else if (sk === "uiic") { qs = D.qs.filter(function (q) { return /UIIC/.test(q.src || "") && q.kind === "pyq" && (!t || q.s === t); }); label = "Every UIIC AO question" + (t ? ", " + secOf(t).short : ""); }
     else if (t === "*") { qs = secQs(sk); label = secOf(sk).short + ", all topics"; }
     else { qs = topicQs(sk, t); label = t; }
     qs = orderQs(qs);
     if (!qs.length) return blank("No questions here yet.");
     var host = quiz({
-      qs: qs, back: "#/practice" + (sk !== "pyq" ? "/" + sk : ""), backLabel: sk === "pyq" ? "Practice" : secOf(sk).short,
-      head: sk !== "pyq" && t !== "*" && D.notes[tkey(sk, t)] ? '<a class="notes-link" href="' + learnHref(sk, t) + '">' + (learned(sk, t) ? "Notes for " : "Read ") + h(t) + ' first' + arr() + '</a>' : '<h1 class="page-h" style="font-size:clamp(24px,3vw,32px);margin:8px 0 0">' + h(label) + '</h1>',
+      qs: qs, back: "#/practice" + (sk !== "pyq" && sk !== "uiic" ? "/" + sk : ""), backLabel: sk === "pyq" || sk === "uiic" ? "Practice" : secOf(sk).short,
+      head: sk !== "pyq" && sk !== "uiic" && t !== "*" && D.notes[tkey(sk, t)] ? '<a class="notes-link" href="' + learnHref(sk, t) + '">' + (learned(sk, t) ? "Notes for " : "Read ") + h(t) + ' first' + arr() + '</a>' : '<h1 class="page-h" style="font-size:clamp(24px,3vw,32px);margin:8px 0 0">' + h(label) + '</h1>',
       get: function (k) { var v = ST.prac[qs[k].id]; return v == null ? null : v; },
       set: function (k, v) { ST.prac[qs[k].id] = v; logAnswer(qs[k], v); save(); },
       startAt: function () { for (var k = 0; k < qs.length; k++) if (ST.prac[qs[k].id] == null) return k; return 0; },
-      done: function () { location.hash = "#/practice" + (sk !== "pyq" ? "/" + sk : ""); }
+      done: function () { location.hash = "#/practice" + (sk !== "pyq" && sk !== "uiic" ? "/" + sk : ""); }
     });
     setAside(host.__pads());
     return host;
@@ -739,7 +747,7 @@ V["practice"] = function (sk, topic) {
   var npyq = D.qs.filter(function (q) { return q.kind === "pyq"; }).length;
   return '<section class="head"><span class="kicker reveal">' + D.qs.length.toLocaleString("en-IN") + ' questions · ' + npyq + ' from past insurance AO papers</span>' +
       '<h1 class="page-h reveal">Practice.</h1><p class="lede reveal">Untimed, the answer and its reason shown as soon as you pick. Wrong answers go to the error log.</p>' +
-      '<div class="reveal" style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn key" href="#/practice/pyq">Every past-paper question' + arr() + '</a><a class="btn quiet" href="#/errors">Error log' + arr() + '</a></div></section>' +
+      '<div class="reveal" style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn key" href="#/practice/uiic">Every UIIC question · ' + D.qs.filter(function (q) { return q.kind === "pyq" && /UIIC/.test(q.src || ""); }).length + arr() + '</a><a class="btn quiet" href="#/practice/pyq">Every past-paper question' + arr() + '</a><a class="btn quiet" href="#/errors">Error log' + arr() + '</a></div></section>' +
     [["pre", "Prelims and Mains"], ["mainsonly", "Mains only"]].map(function (pp) {
       return '<section class="band"><h2 class="sec-h reveal">' + pp[1] + '</h2><div class="tgrid" style="margin-top:18px">' + secsOf(pp[0]).map(function (x) {
         var s = statOf(secQs(x.k));
