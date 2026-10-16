@@ -36,3 +36,34 @@
 .vmeta span{font-size:13px;color:var(--ink-3)}
 .vmeta p{margin:4px 0 0;font-size:14px;line-height:1.45;color:var(--ink-2)}
 .vmeta a{margin-top:6px;font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
+/* maths on a whiteboard */
+.nb-work{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:14px 14px 12px}
+.wk-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.wk-k{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--accent)}
+.nb-work.turn .wk-k{color:#e8590c}
+.wk-q{margin:0 0 10px;font-weight:600;font-size:calc(16px*var(--rs,1));line-height:1.5}
+.wk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wk li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:8px 10px;border-radius:12px;background:var(--paper-2,rgba(127,127,127,.08))}
+.wk-i{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(10,132,255,.14);color:var(--accent);font-size:12.5px;font-weight:800;margin-top:2px}
+.wk-b{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wk-m{font-family:'STIX Two Math','Cambria Math','Latin Modern Math','Times New Roman',serif;font-size:calc(20px*var(--rs,1));line-height:1.45;overflow-x:auto;white-space:pre;padding-bottom:1px}
+.wk-n{font-size:13.5px;color:var(--ink-3);line-height:1.35}
+.wk li.ans{background:rgba(52,199,89,.14);box-shadow:inset 0 0 0 1.5px rgba(52,199,89,.7)}
+.wk li.ans .wk-i{background:rgba(52,199,89,.9);color:#fff}
+.wk li.ans .wk-m{font-weight:700}
+.wk li.hide{cursor:pointer}
+.wk li.hide .wk-b{filter:blur(7px);user-select:none}
+.wk li.hide:after{content:"Tap to check";grid-column:2;margin-top:-26px;justify-self:start;font-size:12px;font-weight:700;color:#e8590c;filter:none}
+.wk-tip{margin:10px 0 0;font-size:14.5px;line-height:1.5}
+.wk-tip span{display:inline-block;margin-right:8px;padding:1px 8px;border-radius:999px;background:rgba(255,159,10,.2);color:#b25e00;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.wk-fig{margin:4px 0 10px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;font-size:.82em;line-height:1.1}
+.fr i{font-style:normal;padding:0 3px}
+.fr i:first-child{border-bottom:1.5px solid currentColor}
+.mm{font-family:'STIX Two Math','Cambria Math','Latin Modern Math','Times New Roman',serif;font-size:1.12em;white-space:nowrap}
+mark{background:rgba(255,214,10,.35);color:inherit;border-radius:4px;padding:0 3px}
+.nb-method .mth{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.mth li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--rule)}
+.mth-n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;font-size:15px}
+.mth-t{font-size:calc(16px*var(--rs,1));line-height:1.45;font-weight:560}
+.mth-note{margin:10px 0 0;font-size:14px;color:var(--ink-3)}

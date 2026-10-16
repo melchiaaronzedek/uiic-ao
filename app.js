@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
 var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "8eaa1f378f";
+var VER = "4122d45996";
 var BRAND = "UIIC AO Compass";
 
 /* ── helpers ── */
@@ -387,12 +387,39 @@ function nb(b) {
     case "formula": out = '<div class="fxg">' + (b.items || []).map(function (f) { return '<div class="fxc"><code>' + h(f.f) + '</code>' + (f.note ? '<span>' + h(f.note) + '</span>' : '') + '</div>'; }).join("") + '</div>'; break;
     case "fig": return '<figure class="nb nb-fig">' + (b.title ? '<h4 class="nb-t">' + h(b.title) + '</h4>' : '') + '<div class="fig-s">' + svgSafe(b.svg) + '</div>' + (b.cap ? '<figcaption>' + hx(b.cap).t + '</figcaption>' : '') + '</figure>';
     case "solve": return solveHTML(b);
+    case "work": return workHTML(b);
+    case "method": return '<div class="nb nb-method' + (b.imp ? ' imp' : '') + '">' + (b.title ? '<h4 class="nb-t">' + h(b.title) + '</h4>' : '<h4 class="nb-t">Method</h4>') +
+      '<ol class="mth">' + (b.steps || []).map(function (x, i) { return '<li><span class="mth-n">' + (i + 1) + '</span><span class="mth-t">' + mx(x) + '</span></li>'; }).join("") + '</ol>' + (b.note ? '<p class="mth-note">' + mx(b.note) + '</p>' : '') + '</div>';
     case "text": return '<div class="nb nb-text' + (b.imp ? ' imp' : '') + '">' + t + (b.paras || []).map(function (x) { var r = hx(x); return '<p' + (r.hot ? ' class="hot"' : '') + '>' + r.t + '</p>'; }).join("") + '</div>';
     default: return "";
   }
   var cls = { points: "nb-pts", table: "nb-tab", timeline: "nb-tl", pairs: "nb-pairs", compare: "nb-cmp", chain: "nb-chain", flow: "nb-flow", formula: "nb-fx" }[b.type];
   return '<div class="nb ' + cls + (b.imp ? ' imp' : '') + (any ? ' has-hot' : '') + '">' + t + out + '</div>';
 }
+/* maths, written the way it is on a whiteboard: [[a/b]] is a stacked fraction, ==x== is highlighted, `x` is a maths run */
+function mx(s) {
+  var r = hx(s), t = r.t;
+  t = t.replace(/\[\[([^\]\/]+)\/([^\]]+)\]\]/g, '<span class="fr"><i>$1</i><i>$2</i></span>')
+       .replace(/==([^=]+)==/g, '<mark>$1</mark>')
+       .replace(/`([^`]+)`/g, '<span class="mm">$1</span>');
+  return t;
+}
+/* a worked example as a whiteboard: the question, one line per step (big maths, a few words on what was done), the answer boxed.
+   rows with "hide" stay covered until tapped, for "Your turn" examples */
+function workHTML(b) {
+  var turn = (b.rows || []).some(function (x) { return x.hide; });
+  return (b.title ? '<h4 class="nb-t sol-g">' + h(b.title) + '</h4>' : '') + '<div class="nb nb-work' + (turn ? ' turn' : '') + (/UIIC/i.test(b.src || "") ? ' has-hot' : '') + '">' +
+    (b.src || turn ? '<div class="wk-h">' + (turn ? '<span class="wk-k">Your turn</span>' : '<span class="wk-k">Worked example</span>') + (b.src ? '<span class="pyq' + (/UIIC/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' : '') +
+    (b.q ? '<p class="wk-q">' + mx(b.q) + '</p>' : '') +
+    (b.fig ? '<div class="fig-s wk-fig">' + svgSafe(b.fig) + '</div>' : '') +
+    '<ol class="wk">' + (b.rows || []).map(function (x, i) {
+      var inner = '<span class="wk-m">' + mx(x.m) + '</span>' + (x.n ? '<span class="wk-n">' + mx(x.n) + '</span>' : '');
+      return '<li class="' + (x.ans ? 'ans' : '') + (x.hide ? ' hide' : '') + '"' + (x.hide ? ' tabindex="0" role="button" aria-label="Tap to reveal this step"' : '') + '>' +
+        '<span class="wk-i">' + (x.ans ? '✓' : i + 1) + '</span><div class="wk-b">' + inner + '</div></li>';
+    }).join("") + '</ol>' +
+    (b.tip ? '<p class="wk-tip"><span>Shortcut</span>' + mx(b.tip) + '</p>' : '') + '</div>';
+}
+document.addEventListener("click", function (e) { var li = e.target.closest && e.target.closest(".nb-work li.hide"); if (li) li.classList.remove("hide"); });
 var SVG_EL = /^(svg|g|line|path|circle|ellipse|rect|polygon|polyline|text|tspan|title)$/,
   SVG_AT = /^(viewBox|class|d|x|y|x1|y1|x2|y2|cx|cy|r|rx|ry|width|height|points|transform|text-anchor|dominant-baseline|dx|dy|stroke-dasharray|role|aria-label)$/;
 function svgSafe(src) {
