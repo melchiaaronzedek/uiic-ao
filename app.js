@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
 var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "4122d45996";
+var VER = "dfc220405f";
 var BRAND = "UIIC AO Compass";
 
 /* ── helpers ── */
