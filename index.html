@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>UIIC AO Compass</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="UIIC AO 2026 preparation: complete notes, video classes, past papers and sectional mocks.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="brand/mark-tile.svg">
+<link rel="apple-touch-icon" href="brand/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="style.css?v=eaefc25699">
+<link rel="stylesheet" href="pf.css?v=eaefc25699">
+</head>
+<body>
+<div class="app" id="shell">
+  <nav class="rail" id="rail">
+    <span class="mark"><b><svg viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(6.4 6.4) scale(.8)"><path d="M52.67 24.48A22 22 0 1 1 39.52 11.33" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/><g transform="rotate(45 32 32)"><path d="M32 4 37 32H27Z" fill="#FFFFFF"/><path d="M27 32h10L32 48Z" fill="#FFFFFF" fill-opacity="0.45"/></g><circle cx="32" cy="32" r="2.6" fill="#0052B5"/></g></svg></b><span style="font-family:var(--disp);font-size:15px;letter-spacing:-.02em;color:var(--ink);font-weight:700;margin:0">UIIC AO Compass<span>Prelims 22 Oct 2026</span></span></span>
+    <button class="rail-toggle" id="railToggle" aria-label="Collapse sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M9.5 4.5v15"/><path class="chev" d="m15.8 10-2 2 2 2"/></svg></button>
+    <a href="#/" data-r="" data-tip="Home"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.4 10.4 12 3.4l8.6 7"/><path d="M5.3 9.6V20.6h13.4V9.6"/></svg><span class="lb">Home</span></a>
+    <a href="#/plan" data-r="plan" data-tip="Plan"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.6"/><path d="M3.5 9.6h17M8 3.2v3.6M16 3.2v3.6M8 13.4h2.4M13.6 13.4H16M8 16.8h2.4"/></svg><span class="lb">Plan</span></a>
+    <div class="rail-sep"></div>
+    <a href="#/learn" data-r="learn" data-tip="Learn"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1.2 5.8-1 8.5.9v13c-2.7-1.9-5.5-2.1-8.5-.9z"/><path d="M20.5 5.5c-3-1.2-5.8-1-8.5.9v13c2.7-1.9 5.5-2.1 8.5-.9z"/></svg><span class="lb">Learn</span></a>
+    <a href="#/practice" data-r="practice" data-tip="Practice"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.2" y="4.2" width="15.6" height="15.6" rx="3"/><path d="m8.2 12.1 2.5 2.5 5.1-5.2"/></svg><span class="lb">Practice</span></a>
+    <a href="#/mocks" data-r="mocks" data-tip="Mocks"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.6"/><path d="M12 9v4.2l2.8 1.8M9.6 2.9h4.8"/></svg><span class="lb">Mocks</span></a>
+    <a href="#/errors" data-r="errors" data-tip="Error log"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.6v5.2M12 16.2v.2"/></svg><span class="lb">Error log</span> <span class="n" id="nErr"></span></a>
+    <div class="rail-sep"></div>
+    <a href="#/exam" data-r="exam" data-tip="Pattern and syllabus"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.4"/><path d="M8 8h8M8 11.5h8M8 15h5"/></svg><span class="lb">Pattern and syllabus</span></a>
+    <a href="#/lastday" data-r="lastday" data-tip="Last-day sheet"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 14.5h6M9 18h4"/></svg><span class="lb">Last-day sheet</span></a>
+    <a href="#/progress" data-r="progress" data-tip="Progress"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.6"/><path d="M12 3.6V12"/></svg><span class="lb">Progress</span></a>
+    <a href="#/sources" data-r="sources" data-tip="Sources"><svg class="ri" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span class="lb">Sources</span></a>
+    <div class="rail-foot">
+      <div class="lbl">Days to Prelims</div>
+      <div class="val" id="railDays">5</div>
+      <div class="sub" id="railSub">Thursday 22 October 2026</div>
+      <button class="btn quiet sm" id="theme" style="margin-top:14px" aria-label="Switch theme"><span class="lb">Theme</span><i><svg class="thi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></i></button>
+    </div>
+  </nav>
+  <main id="main">
+    <div class="boot" id="boot" aria-hidden="true"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+    <div class="top">
+      <span class="mark"><b><svg viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(6.4 6.4) scale(.8)"><path d="M52.67 24.48A22 22 0 1 1 39.52 11.33" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/><g transform="rotate(45 32 32)"><path d="M32 4 37 32H27Z" fill="#FFFFFF"/><path d="M27 32h10L32 48Z" fill="#FFFFFF" fill-opacity="0.45"/></g><circle cx="32" cy="32" r="2.6" fill="#0052B5"/></g></svg></b><span style="font-family:var(--disp);font-size:15px;letter-spacing:-.02em;color:var(--ink);font-weight:700;margin:0">UIIC AO Compass<span>Prelims 22 Oct 2026</span></span></span>
+      <button class="btn quiet sm" id="theme2" aria-label="Switch theme" style="min-width:44px;justify-content:center;padding:9px 14px"><svg class="thi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+    </div>
+  </main>
+  <aside class="aside" id="aside"></aside>
+</div>
+<nav class="bar">
+  <a href="#/" data-r=""><svg viewBox="0 0 24 24"><path d="M3.4 10.4 12 3.4l8.6 7"/><path d="M5.3 9.6V20.6h13.4V9.6"/></svg><span>Home</span></a>
+  <a href="#/learn" data-r="learn"><svg viewBox="0 0 24 24"><path d="M3.5 5.5c3-1.2 5.8-1 8.5.9v13c-2.7-1.9-5.5-2.1-8.5-.9z"/><path d="M20.5 5.5c-3-1.2-5.8-1-8.5.9v13c2.7-1.9 5.5-2.1 8.5-.9z"/></svg><span>Learn</span></a>
+  <a href="#/practice" data-r="practice"><svg viewBox="0 0 24 24"><path d="M4.6 4.6h14.8v14.8H4.6z"/><path d="M8.2 12.1l2.5 2.5 5.1-5.2"/></svg><span>Practice</span></a>
+  <a href="#/mocks" data-r="mocks"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.6"/><path d="M12 9v4.2l2.8 1.8M9.6 2.9h4.8"/></svg><span>Mocks</span></a>
+  <a href="#/more" data-r="more"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></svg><span>More</span></a>
+</nav>
+<script src="js/motion.js?v=eaefc25699" defer></script>
+<script src="app.js?v=eaefc25699" defer></script>
+</body>
+</html>

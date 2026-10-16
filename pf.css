@@ -1,0 +1,38 @@
+/* UIIC AO Compass additions to the shared CGL Compass styles */
+.tbar .tb-tt{flex:1;min-width:0;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.why .why-n{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none}
+.ld-nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.ld-nav a{text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:600}
+.task a{color:inherit;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.task small{display:block;margin-top:2px}
+.ex-secs span[data-sec]{cursor:pointer}
+.ex-syl{margin-top:14px}
+.ex-sh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ex-sh h3{margin:0}
+.ex-off{margin:8px 0 0;color:var(--ink-2);font-size:14.5px;line-height:1.5}
+.ex-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ex-chips a{text-decoration:none;color:var(--ink);background:var(--surface-2,rgba(127,127,127,.12));border-radius:999px;padding:5px 11px;font-size:13.5px;font-weight:600}
+.ex-chips a:hover{color:var(--accent)}
+.ex-go{display:inline-flex;align-items:center;gap:4px;margin-top:12px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none}
+.ex-cnt td{text-align:center}
+.ex-band{margin-top:16px}
+@media print{.rail,.bar,.top,.ld-nav{display:none!important}}
+.nb-text p{margin:0 0 .75em;line-height:1.65;font-size:calc(16px*var(--rs,1))}
+.nb-text p:last-child{margin-bottom:0}
+.nb-text p.hot{background:linear-gradient(transparent 60%,rgba(255,214,10,.18) 0)}
+.fig-s .ln2{fill:none;stroke:var(--ink-3);stroke-width:1.2;stroke-linecap:round}
+
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;margin-top:16px}
+.vcard{background:var(--surface);border:1px solid var(--rule);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.vthumb{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;padding:0;background:#000;cursor:pointer}
+.vthumb img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92}
+.vthumb i{position:absolute;left:50%;top:50%;width:62px;height:44px;margin:-22px 0 0 -31px;border-radius:12px;background:rgba(0,0,0,.72)}
+.vthumb i:after{content:"";position:absolute;left:25px;top:13px;border-style:solid;border-width:9px 0 9px 15px;border-color:transparent transparent transparent #fff}
+.vthumb:hover i{background:#e00}
+.vthumb em{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.78);color:#fff;font-style:normal;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px}
+.vframe{width:100%;aspect-ratio:16/9;border:0;display:block}
+.vmeta{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.vmeta b{font-size:15px;line-height:1.35}
+.vmeta span{font-size:13px;color:var(--ink-3)}
+.vmeta p{margin:4px 0 0;font-size:14px;line-height:1.45;color:var(--ink-2)}
+.vmeta a{margin-top:6px;font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
