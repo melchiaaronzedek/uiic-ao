@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
 var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "eaefc25699";
+var VER = "e22451f5c6";
 var BRAND = "UIIC AO Compass";
 
 /* ── helpers ── */
@@ -928,6 +928,22 @@ V["exam"] = function () {
       '<p class="muted reveal" style="margin-top:10px">Source: UIIC notice for Administrative Officers (Scale I), Generalists and Hindi Officers, 2026. Check your call letter for the reporting time, documents and venue.</p></section>' + foot();
 };
 
+/* ── videos: strategy, insurance, current affairs, and every topic's classes ── */
+V["videos"] = function () {
+  var VD = D.videos || {}, n = Object.keys(VD).reduce(function (a, k) { return a + VD[k].length; }, 0);
+  function band(id, title, sub, list) { return list && list.length ? '<section class="band" id="' + id + '"><h2 class="sec-h reveal">' + h(title) + '</h2>' + (sub ? '<p class="muted reveal" style="margin-top:8px">' + h(sub) + '</p>' : '') + '<div class="vgrid">' + list.map(vidCard).join("") + '</div></section>' : ''; }
+  return '<section class="head"><span class="kicker reveal">' + n + ' classes, each checked to be live</span><h1 class="page-h reveal">Videos.</h1>' +
+      '<p class="lede reveal">The best free classes we found for every topic, best first. Tap one to play it here. Each topic page also has its own classes under Watch.</p>' +
+      '<div class="ld-nav reveal">' + [["v-strat", "Strategy"], ["v-ins", "Insurance"], ["v-ca", "Current affairs"]].concat(D.secs.map(function (x) { return ["v-" + x.k, x.short]; })).map(function (x) { return '<a href="#' + x[0] + '" data-jump="' + x[0] + '">' + h(x[1]) + '</a>'; }).join("") + '</div></section>' +
+    band("v-strat", "Strategy and exam analysis", "UIIC AO 2026 pattern, and what NIACL, NICL and UIIC papers asked.", VD._strategy) +
+    band("v-ins", "Insurance awareness", "For Mains GA: insurance basics, IRDAI and the 2026 insurance news.", VD._insurance) +
+    band("v-ca", "Current affairs, month by month", "For Mains GA: April to October 2026.", VD._ca) +
+    D.secs.map(function (x) {
+      var rows = x.topics.map(function (t) { var L = VD[tkey(x.k, t.n)] || []; return L.length ? '<h3 class="reveal" style="margin:22px 0 0"><a href="' + learnHref(x.k, t.n) + '" style="color:inherit;text-decoration:none">' + h(t.n) + ' ' + arr() + '</a></h3><div class="vgrid">' + L.slice(0, 2).map(vidCard).join("") + '</div>' : ''; }).join("");
+      return rows ? '<section class="band" id="v-' + x.k + '"><h2 class="sec-h reveal">' + h(x.name) + '</h2><p class="muted reveal" style="margin-top:8px">The top two classes per topic; the topic page has the rest.</p>' + rows + '</section>' : '';
+    }).join("") + foot();
+};
+
 /* ── last-day sheet ── */
 V["lastday"] = function () {
   var L = D.lastday; if (!L) return blank("The last-day sheet is being written.");
@@ -954,7 +970,7 @@ V["progress"] = function () {
 
 /* ── more ── */
 V["more"] = function () {
-  var L = [["#/exam", "Exam pattern and syllabus", "Every paper, the marking, selection and the full syllabus"], ["#/plan", "The plan", "Day by day to Prelims on 22 October"], ["#/lastday", "Last-day sheet", "Every subject on one page"], ["#/errors", "Error log", (errList().length || "No") + " questions to clear"],
+  var L = [["#/exam", "Exam pattern and syllabus", "Every paper, the marking, selection and the full syllabus"], ["#/plan", "The plan", "Day by day to Prelims on 22 October"], ["#/videos", "Videos", "The best classes for every topic, plus strategy, insurance and current affairs"], ["#/lastday", "Last-day sheet", "Every topic on one page"], ["#/errors", "Error log", (errList().length || "No") + " questions to clear"],
     ["#/practice/pyq", "Every past-paper question", "UIIC, NIACL and NICL AO, with reasons"], ["#/progress", "Progress", "Mock scores and accuracy by subject"], ["#/sources", "Sources", "Where the notes and facts come from"]];
   return '<section class="head"><h1 class="page-h reveal">More.</h1></section><div class="list reveal">' + L.map(function (x) {
     return '<a class="item" href="' + x[0] + '" style="grid-template-columns:minmax(0,1fr) auto;align-items:center"><span><span class="t">' + h(x[1]) + '</span><span class="d">' + h(x[2]) + '</span></span><span class="end">' + arr() + '</span></a>';
@@ -997,7 +1013,7 @@ function route() {
   else if (p[0] === "errors") { key = "errors"; args = [p[1] === "run"]; }
   else if (V[p[0]]) key = p[0];
   else key = "404";
-  var TITLES = { "": "Home", plan: "The plan", learn: "Learn", practice: "Practice", errors: "Error log", mocks: "Mocks", mock: "Mock", mockrun: "Mock in progress", mockresult: "Mock result", mockreview: "Mock review", mockpaper: "Question paper with answers", exam: "Exam pattern and syllabus", lastday: "Last-day sheet", progress: "Progress", more: "More", sources: "Sources" };
+  var TITLES = { "": "Home", plan: "The plan", learn: "Learn", practice: "Practice", errors: "Error log", mocks: "Mocks", mock: "Mock", mockrun: "Mock in progress", mockresult: "Mock result", mockreview: "Mock review", mockpaper: "Question paper with answers", exam: "Exam pattern and syllabus", lastday: "Last-day sheet", videos: "Videos", progress: "Progress", more: "More", sources: "Sources" };
   document.title = (TITLES[key] ? TITLES[key] + " · " : "") + BRAND;
   var out;
   try { out = V[key] ? V[key].apply(null, args) : blank(); } catch (err) { console.error(err); out = blank("Something went wrong drawing this page."); }
