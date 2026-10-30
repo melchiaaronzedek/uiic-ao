@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════
-   UIIC AO Compass: UIIC Administrative Officer (Scale I) Generalist 2026.
+   NICL AO Compass: NICL Administrative Officer (Scale I) 2026, Agriculture specialist.
    Vanilla SPA, no build step. The study data is one sealed file (p/data.bin,
    AES-GCM, gzip inside); its key arrives once in the private link (#key=…)
    and stays in this browser. Progress lives in this browser only.
@@ -8,10 +8,10 @@
 (function () {
 "use strict";
 
-var EXAM = new Date(2026, 9, 22, 8, 0, 0);       // Prelims, Thursday 22 October 2026, reporting 8:00 am
-var MAINS = new Date(2026, 10, 30, 9, 0, 0);     // Mains, 30 November 2026 (tentative)
-var VER = "0718aaec0b";
-var BRAND = "UIIC AO Compass";
+var EXAM = new Date(2026, 10, 17, 9, 0, 0);      // Phase I (Prelims), Tuesday 17 November 2026
+var MAINS = new Date(2026, 11, 22, 9, 0, 0);     // Phase II (Mains), Tuesday 22 December 2026
+var VER = "82fd52309b";
+var BRAND = "NICL AO Compass";
 
 /* ── helpers ── */
 function h(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -29,18 +29,18 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 /* ── state, this browser only ── */
 var SKEYS = ["prac", "log", "att", "learn", "plan", "seen"];
 function fresh() { var o = {}; SKEYS.forEach(function (k) { o[k] = {}; }); return o; }
-var ST = (function () { try { var s = JSON.parse(localStorage.getItem("uc-state") || "null"); if (s) { SKEYS.forEach(function (k) { s[k] = s[k] || {}; }); return s; } } catch (e) {} return fresh(); })();
+var ST = (function () { try { var s = JSON.parse(localStorage.getItem("nc-state") || "null"); if (s) { SKEYS.forEach(function (k) { s[k] = s[k] || {}; }); return s; } } catch (e) {} return fresh(); })();
 var saveT = null;
-function save() { clearTimeout(saveT); saveT = setTimeout(function () { lsSet("uc-state", JSON.stringify(ST)); }, 120); }
-window.addEventListener("pagehide", function () { lsSet("uc-state", JSON.stringify(ST)); });
+function save() { clearTimeout(saveT); saveT = setTimeout(function () { lsSet("nc-state", JSON.stringify(ST)); }, 120); }
+window.addEventListener("pagehide", function () { lsSet("nc-state", JSON.stringify(ST)); });
 
 /* ── data ── */
 var D = null, QIDX = null, PIDX = null;
 function b64u(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
 function takeKey() {
   var m = /[#&?]key=([A-Za-z0-9_-]{40,})/.exec(location.hash);
-  if (m) { lsSet("uc-key", m[1]); history.replaceState(null, "", location.pathname + location.search + "#/"); }
-  return lsGet("uc-key", "");
+  if (m) { lsSet("nc-key", m[1]); history.replaceState(null, "", location.pathname + location.search + "#/"); }
+  return lsGet("nc-key", "");
 }
 function loadData() {
   var k = takeKey();
@@ -64,7 +64,7 @@ function paperOf(q) {
 function SECS() { return D.secs; }
 function secOf(k) { return D.secs.filter(function (s) { return s.k === k; })[0] || { k: k, name: k, short: k, tone: "q", topics: [] }; }
 function secsOf(pp) { return D.secs.filter(function (s) { return pp === "pre" ? !!s.pre : pp === "mainsonly" ? !s.pre : !!(s.mains || s.desc); }); }
-/* Prelims: 1 mark a question. Mains: section marks over questions (English 1.25, Reasoning and Quant 1.2, GA 1.5, Computer 1). A quarter off for a wrong answer. */
+/* NICL: 1 mark a question in both phases (section marks over questions). A quarter off for a wrong answer. */
 function plusOf(q, kind) { var s = secOf(q.s); return kind === "MAINS" && s.mains ? s.mains[1] / s.mains[0] : 1; }
 function minusOf(q, kind) { return plusOf(q, kind) / 4; }
 function fmtM(x) { return (Math.round(x * 100) / 100).toString(); }
@@ -150,7 +150,7 @@ function stemHTML(q) { return '<p>' + h(q.q).replace(/\n/g, "<br>") + '</p>'; }
 function optHTML(o) { return h(o); }
 function srcLabel(q) { return q.src || ""; }
 function srcChip(q) {
-  if (q.kind === "pyq") return ' <span class="pyq' + (/UIIC/.test(q.src || "") ? ' y26' : '') + '" title="Asked in an insurance AO exam (memory-based)">' + h(q.src) + '</span>';
+  if (q.kind === "pyq") return ' <span class="pyq' + (/NICL/.test(q.src || "") ? ' y26' : '') + '" title="Asked in an insurance AO exam (memory-based)">' + h(q.src) + '</span>';
   return '';
 }
 
@@ -229,10 +229,10 @@ function quiz(cfg) {
 }
 
 /* ══════════ the exam hall ══════════
-   The UIIC screen: separately timed sections (the clock and tabs come from the
+   The NICL screen: separately timed sections (the clock and tabs come from the
    caller), a palette with the five
    exam states, and answers that count only after Save & Next. */
-var EXFS = +lsGet("uc-exfs", 1);
+var EXFS = +lsGet("nc-exfs", 1);
 function examHall(cfg) {
   var qs = cfg.qs, n = qs.length, i = Math.min(cfg.startAt ? cfg.startAt() : 0, n - 1), pend = null, timer = null, shownAt = Date.now();
   var host = document.createElement("div");
@@ -302,7 +302,7 @@ function examHall(cfg) {
       '<div class="ex-mact"><button class="ex-b save" data-m="ok">Back to the paper</button></div>', function (m, close) { el('[data-m="ok"]', m).addEventListener("click", close); });
   }
   function full() { if (document.fullscreenElement) document.exitFullscreen && document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {}); }
-  function size(d) { EXFS = Math.max(0.85, Math.min(1.4, +(EXFS + d).toFixed(2))); lsSet("uc-exfs", EXFS); host.style.setProperty("--exfs", EXFS); }
+  function size(d) { EXFS = Math.max(0.85, Math.min(1.4, +(EXFS + d).toFixed(2))); lsSet("nc-exfs", EXFS); host.style.setProperty("--exfs", EXFS); }
   host.addEventListener("click", function (e) {
     var t = e.target.closest("[data-x],[data-j],[data-sec],input[name=exo]");
     if (!t) return;
@@ -346,16 +346,17 @@ function examHall(cfg) {
 }
 
 /* ══════════ notes ══════════ */
-var PYQ_RE = /\s*((?:\{(?:PYQ|UIIC)(?: [\d, ]+)?\}\s*)+)$/;
+var PYQ_RE = /\s*((?:\{(?:PYQ|UIIC|NICL)(?: [\d, ]+)?\}\s*)+)$/;
 function hx(s) {
   s = s == null ? "" : String(s);
   var m = s.match(PYQ_RE);
   if (!m) return { t: h(s), hot: false };
-  var tags = "", re = /\{(PYQ|UIIC)(?: ([\d, ]+))?\}/g, x, uiic = false;
+  var tags = "", re = /\{(PYQ|UIIC|NICL)(?: ([\d, ]+))?\}/g, x, uiic = false;
   while ((x = re.exec(m[1]))) {
     var ys = x[2] ? x[2].split(/,\s*/).filter(Boolean) : [];
-    if (x[1] === "UIIC") { uiic = true; tags += ' <span class="pyq y26" title="Asked in UIIC AO' + (ys.length ? ": " + ys.join(", ") : "") + '">UIIC' + (ys.length ? " " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "") + '</span>'; continue; }
-    tags += ' <span class="pyq" title="Asked in UIIC, NIACL or NICL AO' + (ys.length ? ": " + ys.join(", ") : "") + '">' + (ys.length ? "Asked " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "Asked") + '</span>';
+    if (x[1] === "NICL") { uiic = true; tags += ' <span class="pyq y26" title="Asked in NICL AO' + (ys.length ? ": " + ys.join(", ") : "") + '">NICL' + (ys.length ? " " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "") + '</span>'; continue; }
+    if (x[1] === "UIIC") { tags += ' <span class="pyq" title="Asked in UIIC AO' + (ys.length ? ": " + ys.join(", ") : "") + '">UIIC' + (ys.length ? " " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "") + '</span>'; continue; }
+    tags += ' <span class="pyq" title="Asked in an insurance AO or AFO paper' + (ys.length ? ": " + ys.join(", ") : "") + '">' + (ys.length ? "Asked " + ys.map(function (y) { return "’" + y.slice(2); }).join(" ") : "Asked") + '</span>';
   }
   return { t: h(s.replace(PYQ_RE, "")) + tags, hot: true, uiic: uiic };
 }
@@ -408,8 +409,8 @@ function mx(s) {
    rows with "hide" stay covered until tapped, for "Your turn" examples */
 function workHTML(b) {
   var turn = (b.rows || []).some(function (x) { return x.hide; });
-  return (b.title ? '<h4 class="nb-t sol-g">' + h(b.title) + '</h4>' : '') + '<div class="nb nb-work' + (turn ? ' turn' : '') + (/UIIC/i.test(b.src || "") ? ' has-hot' : '') + '">' +
-    (b.src || turn ? '<div class="wk-h">' + (turn ? '<span class="wk-k">Your turn</span>' : '<span class="wk-k">Worked example</span>') + (b.src ? '<span class="pyq' + (/UIIC/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' : '') +
+  return (b.title ? '<h4 class="nb-t sol-g">' + h(b.title) + '</h4>' : '') + '<div class="nb nb-work' + (turn ? ' turn' : '') + (/NICL/i.test(b.src || "") ? ' has-hot' : '') + '">' +
+    (b.src || turn ? '<div class="wk-h">' + (turn ? '<span class="wk-k">Your turn</span>' : '<span class="wk-k">Worked example</span>') + (b.src ? '<span class="pyq' + (/NICL/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' : '') +
     (b.q ? '<p class="wk-q">' + mx(b.q) + '</p>' : '') +
     (b.fig ? '<div class="fig-s wk-fig">' + svgSafe(b.fig) + '</div>' : '') +
     '<ol class="wk">' + (b.rows || []).map(function (x, i) {
@@ -458,14 +459,14 @@ function solveHTML(b) {
   var ok = o.findIndex ? o.findIndex(function (x) { return String(x).trim() === a; }) : -1;
   var pyq = b.src && !/^practice/i.test(b.src);
   return (b.title ? '<h4 class="nb-t sol-g">' + h(b.title) + '</h4>' : '') + '<div class="nb nb-sol has-hot">' +
-    '<div class="sol-h"><span class="sol-k">' + (pyq ? "Solved PYQ" : "Worked example") + '</span>' + (pyq ? '<span class="pyq' + (/UIIC/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' +
+    '<div class="sol-h"><span class="sol-k">' + (pyq ? "Solved PYQ" : "Worked example") + '</span>' + (pyq ? '<span class="pyq' + (/NICL/i.test(b.src) ? ' y26' : '') + '">' + h(b.src) + '</span>' : '') + '</div>' +
     '<p class="sol-q">' + h(b.q) + '</p>' + (b.svg ? '<div class="fig-s sol-fig">' + svgSafe(b.svg) + '</div>' : '') +
     (o.length ? '<ol class="sol-o">' + o.map(function (x, i) { return '<li' + (i === ok ? ' class="ok"' : '') + '><b>' + L[i] + '</b><span>' + h(x) + '</span></li>'; }).join("") + '</ol>' : '') +
     '<details class="sol-d"><summary><span>Show the full solution</span></summary><ol class="sol-st">' + (b.steps || []).map(function (x) { return '<li>' + h(x) + '</li>'; }).join("") + '</ol>' +
       '<p class="sol-a"><span>Answer</span><b>' + h(a) + '</b></p>' + (b.trick ? '<p class="sol-tr"><span>Shortcut</span>' + h(b.trick) + '</p>' : '') + '</details></div>';
 }
 var YLD = { high: "Asked often", med: "Asked sometimes", medium: "Asked sometimes" };
-var noteMode = lsGet("uc-note-mode", "full"), noteLens = "", tocOff = lsGet("uc-toc", "on") === "off";
+var noteMode = lsGet("nc-note-mode", "full"), noteLens = "", tocOff = lsGet("nc-toc", "on") === "off";
 function notesV4(N) {
   var R = N.recap || {}, C = N.chapters || [];
   var recap = '<div class="nv-recap"><ol class="rc-lines">' + (R.lines || []).map(function (x) { var r = hx(x); return '<li' + (r.hot ? ' class="hot"' : '') + '>' + r.t + '</li>'; }).join("") + '</ol></div>';
@@ -480,9 +481,9 @@ function notesV4(N) {
     '<div class="nv-chs">' + C.map(function (c, i) {
       return '<article class="nch' + (/\{PYQ|"type":"solve"/.test(JSON.stringify(c.blocks || [])) ? ' has-hot' : '') + '" id="nch-' + i + '"><header><span class="nch-n">Chapter ' + (i + 1) + (YLD[c.yield] ? '<em class="yl yl-' + (c.yield === "med" ? "medium" : c.yield) + '">' + YLD[c.yield] + '</em>' : '') + '</span><h3>' + h(c.h) + '</h3></header>' +
         (c.intro ? '<p class="nch-in">' + h(c.intro) + '</p>' : '') + (c.blocks || []).map(nb).join("") + '</article>'; }).join("") + '</div></div>';
-  var CS = JSON.stringify(C), hot1 = (CS.match(/\{(PYQ|UIIC)/g) || []).length, nu = (CS.match(/\{UIIC/g) || []).length + (CS.match(/"src":"[^"]*UIIC/g) || []).length, hot = hot1 + (CS.match(/"type":"solve"/g) || []).length, nimp = (CS.match(/"imp":true/g) || []).length;
+  var CS = JSON.stringify(C), hot1 = (CS.match(/\{(PYQ|UIIC|NICL)/g) || []).length, nu = (CS.match(/\{NICL/g) || []).length + (CS.match(/"src":"[^"]*NICL/g) || []).length, hot = hot1 + (CS.match(/"type":"solve"/g) || []).length, nimp = (CS.match(/"imp":true/g) || []).length;
   var mode = noteMode === "recap" ? "recap" : "full";
-  var L = [["", "All notes"]].concat(nu ? [["y26", "Asked in UIIC · " + nu]] : [], hot ? [["asked", "Asked in AO papers"]] : [], nimp ? [["imp", "Must read · " + nimp]] : []);
+  var L = [["", "All notes"]].concat(nu ? [["y26", "Asked in NICL · " + nu]] : [], hot ? [["asked", "Asked in AO papers"]] : [], nimp ? [["imp", "Must read · " + nimp]] : []);
   var lens = L.some(function (x) { return x[0] === noteLens; }) ? noteLens : "";
   return '<div class="nv" data-mode="' + mode + '" data-lens="' + lens + '" data-toc="' + (tocOff ? "off" : "on") + '">' +
     (L.length > 1 ? '<div class="nv-lens"><span class="nv-lk">' + (hot1 ? '<span class="pyq">Asked</span> ' + hot1 + ' lines asked in insurance AO papers' : 'Solved questions in the chapters') + '</span>' +
@@ -493,9 +494,9 @@ function notesV4(N) {
 }
 function wireNotes() {
   var nv = el(".nv"); if (!nv) return;
-  els("[data-toct]", nv).forEach(function (b) { b.addEventListener("click", function () { tocOff = !tocOff; nv.dataset.toc = tocOff ? "off" : "on"; lsSet("uc-toc", tocOff ? "off" : "on"); }); });
+  els("[data-toct]", nv).forEach(function (b) { b.addEventListener("click", function () { tocOff = !tocOff; nv.dataset.toc = tocOff ? "off" : "on"; lsSet("nc-toc", tocOff ? "off" : "on"); }); });
   els(".nv-chs .nb.imp", nv).forEach(function (b) { var c = b.closest(".nch"); if (c) c.classList.add("hasimp"); });
-  // what UIIC itself asked: the "Asked in UIIC" view keeps just those lines, blocks and chapters
+  // what NICL itself asked: the "Asked in NICL" view keeps just those lines, blocks and chapters
   els(".nv-chs .pyq.y26", nv).forEach(function (p) {
     var line = p.closest(".pts li, tr, .np > div, .nb-tl li, .chn-r, .nb-co, .nb-sol, .nb-text p"); if (line) line.classList.add("y26");
     var b = p.closest(".nb"); if (b) b.classList.add("has26");
@@ -508,7 +509,7 @@ function wireNotes() {
     refreshPicker();
   }); });
   els("[data-nm]", nv).forEach(function (b) { b.addEventListener("click", function () {
-    noteMode = b.dataset.nm; nv.dataset.mode = noteMode; lsSet("uc-note-mode", noteMode);
+    noteMode = b.dataset.nm; nv.dataset.mode = noteMode; lsSet("nc-note-mode", noteMode);
     els("[data-nm]", nv).forEach(function (x) { x.setAttribute("aria-selected", String(x === b)); });
     var M = window.Motion, body = el(noteMode === "recap" ? ".nv-recap" : ".nv-full", nv);
     if (M && !reduceMotion()) M.animate(body, { opacity: [0, 1], transform: ["translateY(8px)", "translateY(0)"] }, { duration: 0.3, ease: [0.23, 1, 0.32, 1] });
@@ -562,17 +563,18 @@ function wireNotes() {
 var V = {};
 function blank(msg) { return '<div class="blank"><b>Not found</b><p>' + h(msg || "That page does not exist.") + '</p><a class="btn key" href="#/" style="margin-top:20px">Home' + arr() + '</a></div>'; }
 function foot() {
-  return '<footer class="foot">UIIC Administrative Officer (Scale I), Generalist, 2026. Prelims on 22 October 2026, Mains on 30 November 2026 (tentative).<br>' +
-    'Notes written for this site from the official syllabus and public sources. Past papers are memory-based recollections; verify dates and rules against your call letter and uiic.co.in. Not affiliated with United India Insurance.</footer>';
+  return '<footer class="foot">NICL Administrative Officer (Scale I) 2026, Agriculture specialist. Phase I on 17 November 2026, Phase II on 22 December 2026.<br>' +
+    'Notes written for this site from the official syllabus and public sources. Past papers are memory-based recollections; verify dates and rules against your call letter and nationalinsurance.nic.co.in. Not affiliated with National Insurance Company.</footer>';
 }
 function secTone(k) { return secOf(k).tone || "q"; }
 
 /* ── home ── */
 function todayPlan() {
   var t = ymd(new Date()), P = D.plan || [];
-  for (var i = 0; i < P.length; i++) if (P[i].date === t) return { d: P[i], i: i };
-  if (P.length && t < P[0].date) return { d: P[0], i: 0 };
-  return P.length ? { d: P[P.length - 1], i: P.length - 1 } : null;
+  // the latest entry on or before today: daily entries before Phase I, weekly blocks after it
+  var k = -1; for (var i = 0; i < P.length; i++) if (P[i].date <= t) k = i;
+  if (k < 0) k = 0;
+  return P.length ? { d: P[k], i: k } : null;
 }
 V[""] = function () {
   var t = totals(), d = daysTo(EXAM), hist = mockHistory(), last = hist[hist.length - 1];
@@ -593,9 +595,9 @@ V[""] = function () {
       return '<a class="item reveal" href="' + x[0] + '"><span class="num">' + (i + 1) + '</span><span><span class="t">' + h(x[1]) + '</span>' + (x[2] ? '<span class="d">' + h(x[2]) + '</span>' : '') + '</span></a>';
     }).join("") + '</div></section>' : '';
   return '<section class="head hero"><div class="hero-t">' +
-      '<span class="kicker reveal">Prelims · Thursday 22 October 2026 · report 8:00 am</span>' +
+      '<span class="kicker reveal">Phase I · Tuesday 17 November 2026 · Phase II · 22 December</span>' +
       '<h1 class="page-h reveal">' + (d ? d + ' day' + (d === 1 ? '' : 's') + ' left.' : 'Exam day.') + '</h1>' +
-      '<p class="lede reveal">UIIC Administrative Officer, Generalist. Prelims: English 30, Reasoning 35 and Quant 35 questions, each section on its own 20-minute clock, a quarter mark off for every wrong answer.</p>' +
+      '<p class="lede reveal">NICL Administrative Officer, Agriculture specialist. Phase I: English 30, Reasoning 35, Quant 35, each on its own 20-minute clock. Phase II adds Agriculture (50), GA, Computer and a descriptive test. A quarter mark off for every wrong answer.</p>' +
     '</div><figure class="hero-g reveal">' + rings(ring) + ringLegend(ring) + '</figure></section>' +
     (D.lastday ? '<a class="ld-band reveal" href="#/lastday"><span class="ld-k">' + (d <= 1 ? 'Read tonight' : 'Final revision') + '</span><b>The last-day sheet</b><span class="d">Every topic on one page: the methods, formulas and traps that insurance AO papers keep testing.</span></a>' : '') +
     nextHTML +
@@ -604,11 +606,11 @@ V[""] = function () {
       '<div class="stat"><div class="k">Last mock</div><div class="v">' + (last ? fmtM(last.s.marks) + '<small> / ' + fmtM(last.s.max) + '</small>' : '—') + '</div><div class="s">' + (last ? h(last.p.label) : 'none yet') + '</div></div>' +
       '<div class="stat"><div class="k">Accuracy</div><div class="v">' + (t.acc == null ? '—' : t.acc + '%') + '</div><div class="s">' + (t.done ? t.right + ' right of ' + t.done : 'nothing answered yet') + '</div></div>' +
       '<div class="stat"><div class="k">Error log</div><div class="v">' + nErr + '</div><div class="s">questions still to clear</div></div>' +
-      '<div class="stat"><div class="k">Mains</div><div class="v">' + daysTo(MAINS) + '<small> days</small></div><div class="s">30 November 2026 (tentative)</div></div>' +
+      '<div class="stat"><div class="k">Phase II</div><div class="v">' + daysTo(MAINS) + '<small> days</small></div><div class="s">22 December 2026 · Agriculture 50</div></div>' +
     '</div>' +
     '<section class="band"><h2 class="sec-h reveal">The exam</h2><div class="two" style="margin-top:18px">' +
-      '<div class="note reveal"><h3>Prelims · 22 Oct · 60 min</h3><ul class="pts">' + secsOf("pre").map(function (s) { return '<li>' + h(s.name) + ': ' + s.pre[0] + ' questions in ' + s.pre[2] + ' minutes</li>'; }).join("") + '<li>A cut-off in every section and overall. Prelims marks only shortlist you for Mains.</li></ul></div>' +
-      '<div class="note reveal"><h3>Mains · 30 Nov · 150 min + 30</h3><ul class="pts">' + secsOf("mains").filter(function (s) { return s.mains; }).map(function (s) { return '<li>' + h(s.short) + ': ' + s.mains[0] + ' questions, ' + s.mains[1] + ' marks, ' + s.mains[2] + ' min</li>'; }).join("") + '<li>Then a typed letter and essay, 30 marks in 30 minutes. Final merit: Mains objective 75, interview 25.</li></ul></div>' +
+      '<div class="note reveal"><h3>Phase I · 17 Nov · 60 min</h3><ul class="pts">' + secsOf("pre").map(function (s) { return '<li>' + h(s.name) + ': ' + s.pre[0] + ' questions in ' + s.pre[2] + ' minutes</li>'; }).join("") + '<li>A cut-off in every section and overall. Phase I marks only shortlist you (about 15 times the vacancies).</li></ul></div>' +
+      '<div class="note reveal"><h3>Phase II · 22 Dec · 180 min + 30</h3><ul class="pts">' + secsOf("mains").filter(function (s) { return s.mains; }).map(function (s) { return '<li>' + h(s.short) + ': ' + s.mains[0] + ' questions, ' + s.mains[1] + ' marks, ' + s.mains[2] + ' min</li>'; }).join("") + '<li>Then a typed essay, précis and comprehension, 30 marks in 30 minutes (qualifying). Final merit: Phase II objective 80, interview 20.</li></ul></div>' +
     '</div></section>' + foot();
 };
 
@@ -618,11 +620,11 @@ V["plan"] = function () {
   P.forEach(function (s) { s.tasks.forEach(function (t, k) { ids.push(s.date + "t" + k); }); });
   var done = ids.filter(function (k) { return ST.plan[k]; }).length, tday = ymd(new Date());
   return '<section class="head"><span class="kicker reveal">' + done + ' of ' + ids.length + ' done</span>' +
-      '<h1 class="page-h reveal">Six days to Prelims.</h1>' +
-      '<p class="lede reveal">Prelims is three sections on separate 20-minute clocks, so speed on the high-yield question types decides it. Mornings go to the topic notes and their videos, afternoons to timed sectional practice, evenings to a full mock and the error log. The last day is revision only.</p>' +
+      '<h1 class="page-h reveal">' + daysTo(EXAM) + ' days to Phase I, ' + daysTo(MAINS) + ' to Phase II.</h1>' +
+      '<p class="lede reveal">Until Phase I: English, Reasoning and Quant every day, with an hour of Agriculture each evening so Phase II does not start from zero. After 17 November: five weeks for Agriculture (50 of 250 marks), GA, Computer, the descriptive test and full Phase II mocks.</p>' +
       '<div class="track reveal" style="max-width:320px;margin-top:22px"><i style="--p:' + (pc(done, ids.length) / 100) + '"></i></div></section>' +
     '<div class="plan">' + P.map(function (s, i) {
-      var today = s.date === tday;
+      var today = todayPlan() && todayPlan().i === i;
       return '<details class="sess reveal"' + (today || (!P.some(function (x) { return x.date === tday; }) && i === 0) ? " open" : "") + '>' +
         '<summary><span class="sd">' + (today ? "Today" : h(s.label)) + '</span><span class="st">' + h(s.t) + '</span><span class="tag' + (today ? " key" : "") + '">Day ' + (i + 1) + '</span></summary>' +
         '<div class="body"><p class="goal">' + h(s.goal) + '</p><div class="blk">' + s.tasks.map(function (t, k) {
@@ -645,11 +647,11 @@ V["learn"] = function (sk, topic) {
         '<span class="muted reveal">' + title + ' · ' + done + ' of ' + x.topics.length + ' read</span></div>' +
         (x.official ? '<details class="offic reveal"><summary>Official syllabus wording</summary><p>' + h(x.official) + '</p></details>' : '') +
         '<div class="tgrid">' + x.topics.map(function (t) {
-          var N = D.notes[tkey(x.k, t.n)], qs = topicQs(x.k, t.n), st = statOf(qs), NS = N ? JSON.stringify(N) : "", asked = (NS.match(/\{(PYQ|UIIC)/g) || []).length, uq = (NS.match(/\{UIIC/g) || []).length + qs.filter(function (q) { return /UIIC/.test(q.src || ""); }).length;
+          var N = D.notes[tkey(x.k, t.n)], qs = topicQs(x.k, t.n), st = statOf(qs), NS = N ? JSON.stringify(N) : "", asked = (NS.match(/\{(PYQ|UIIC|NICL)/g) || []).length, uq = (NS.match(/\{NICL/g) || []).length + qs.filter(function (q) { return /NICL/.test(q.src || ""); }).length;
           return '<a class="tcard reveal' + (learned(x.k, t.n) ? " done" : "") + '" href="' + learnHref(x.k, t.n) + '" data-tn="' + h((t.n + " " + x.name).toLowerCase()) + '" data-ts="' + x.k + '"' + (learned(x.k, t.n) ? ' data-tl="1"' : '') + '>' +
             '<span class="tc-top"><span class="tc-w">' + (N ? '<b>' + (N.chapters || []).length + '</b> chapters' : 'Notes coming') + '</span>' +
               (learned(x.k, t.n) ? '<span class="tag key">Read</span>' : asked ? '<span class="tag">Asked ×' + asked + '</span>' : '') + '</span>' +
-            '<span class="tc-t">' + h(t.n) + (uq ? ' <span class="pyq y26" title="Asked in UIIC AO papers">UIIC · ' + uq + '</span>' : '') + '</span>' +
+            '<span class="tc-t">' + h(t.n) + (uq ? ' <span class="pyq y26" title="Asked in NICL AO papers">NICL · ' + uq + '</span>' : '') + '</span>' +
             '<span class="tc-bar"><i style="--p:' + (st.n ? Math.max(0.04, st.done / st.n) : 0) + '"></i></span>' +
             '<span class="tc-d">' + st.n + ' question' + (st.n === 1 ? '' : 's') + (st.done ? ' · ' + st.done + ' done' : '') + '</span></a>';
         }).join("") + '</div></section>';
@@ -686,7 +688,7 @@ function topicPage(sk, t) {
   var sec = secOf(sk), list = sec.topics, idx = list.map(function (x) { return x.n; }).indexOf(t);
   if (idx < 0) return blank();
   var N = D.notes[tkey(sk, t)] || null, qs = topicQs(sk, t), st = statOf(qs);
-  lsSet("uc-last", JSON.stringify({ s: sk, t: t }));
+  lsSet("nc-last", JSON.stringify({ s: sk, t: t }));
   var prev = list[idx - 1], next = list[idx + 1], steps = [];
   function step(id, title, body) { steps.push([id, title]); return '<section class="band tstep" id="' + id + '"><h2 class="sec-h reveal"><span class="sn">' + steps.length + '</span>' + title + '</h2>' + body + '</section>'; }
   function ul(a) { return '<ul class="pts">' + a.map(function (x) { var r = hx(x); return '<li' + (r.hot ? ' class="hot"' : '') + '>' + r.t + '</li>'; }).join("") + '</ul>'; }
@@ -745,7 +747,7 @@ V["practice"] = function (sk, topic) {
   if (sk && (topic || sk === "pyq" || sk === "uiic")) {
     var t = topic ? decodeURIComponent(topic) : "", qs, label;
     if (sk === "pyq") { qs = D.qs.filter(function (q) { return q.kind === "pyq" && (!t || q.s === t); }); label = "Every past insurance AO question" + (t ? ", " + secOf(t).short : ""); }
-    else if (sk === "uiic") { qs = D.qs.filter(function (q) { return /UIIC/.test(q.src || "") && q.kind === "pyq" && (!t || q.s === t); }); label = "Every UIIC AO question" + (t ? ", " + secOf(t).short : ""); }
+    else if (sk === "uiic") { qs = D.qs.filter(function (q) { return /NICL/.test(q.src || "") && q.kind === "pyq" && (!t || q.s === t); }); label = "Every NICL AO question" + (t ? ", " + secOf(t).short : ""); }
     else if (t === "*") { qs = secQs(sk); label = secOf(sk).short + ", all topics"; }
     else { qs = topicQs(sk, t); label = t; }
     qs = orderQs(qs);
@@ -774,7 +776,7 @@ V["practice"] = function (sk, topic) {
   var npyq = D.qs.filter(function (q) { return q.kind === "pyq"; }).length;
   return '<section class="head"><span class="kicker reveal">' + D.qs.length.toLocaleString("en-IN") + ' questions · ' + npyq + ' from past insurance AO papers</span>' +
       '<h1 class="page-h reveal">Practice.</h1><p class="lede reveal">Untimed, the answer and its reason shown as soon as you pick. Wrong answers go to the error log.</p>' +
-      '<div class="reveal" style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn key" href="#/practice/uiic">Every UIIC question · ' + D.qs.filter(function (q) { return q.kind === "pyq" && /UIIC/.test(q.src || ""); }).length + arr() + '</a><a class="btn quiet" href="#/practice/pyq">Every past-paper question' + arr() + '</a><a class="btn quiet" href="#/errors">Error log' + arr() + '</a></div></section>' +
+      '<div class="reveal" style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn key" href="#/practice/uiic">Every NICL question · ' + D.qs.filter(function (q) { return q.kind === "pyq" && /NICL/.test(q.src || ""); }).length + arr() + '</a><a class="btn quiet" href="#/practice/pyq">Every past-paper question' + arr() + '</a><a class="btn quiet" href="#/errors">Error log' + arr() + '</a></div></section>' +
     [["pre", "Prelims and Mains"], ["mainsonly", "Mains only"]].map(function (pp) {
       return '<section class="band"><h2 class="sec-h reveal">' + pp[1] + '</h2><div class="tgrid" style="margin-top:18px">' + secsOf(pp[0]).map(function (x) {
         var s = statOf(secQs(x.k));
@@ -815,7 +817,7 @@ V["mocks"] = function () {
   D.papers.forEach(function (p) { var g = p.group || p.year; if (!groups[g]) { groups[g] = []; order.push(g); } groups[g].push(p); });
   var hist = mockHistory();
   return '<section class="head"><span class="kicker reveal">' + D.papers.length + ' papers · ' + hist.length + ' taken</span><h1 class="page-h reveal">Mocks.</h1>' +
-      '<p class="lede reveal">Full mocks in the 2026 pattern, real UIIC, NIACL and NICL AO papers recalled by candidates, and your practice sets. Mock mode runs them like the hall: each section on its own clock, Save &amp; Next, and a quarter mark off for each wrong answer.</p></section>' +
+      '<p class="lede reveal">Full mocks in the 2026 pattern, real NICL, UIIC and NIACL AO papers recalled by candidates, agriculture papers from IBPS AFO Mains, and practice sets. Mock mode runs them like the hall: each section on its own clock, Save &amp; Next, and a quarter mark off for each wrong answer.</p></section>' +
     order.map(function (g) {
       return '<section class="band"><h2 class="sec-h reveal">' + h(g) + '</h2><div class="list" style="margin-top:18px">' + groups[g].map(function (p) {
         var a = att(p.id), s = a && a.done ? paperScore(p.id) : null;
@@ -865,7 +867,7 @@ document.addEventListener("click", function (e) {
   var a = e.target.closest && e.target.closest("[data-kp]"); if (!a) return;
   e.preventDefault(); var t = document.getElementById("kp-" + a.dataset.kp); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
 });
-/* Separately timed sections, as the UIIC notice says: each section has its own clock and
+/* Separately timed sections, as the NICL notice says: each section has its own clock and
    locks once submitted or out of time. Time runs on while the page is closed; a mock left
    for over two hours is treated as abandoned. */
 function secMins(p, k) { var s = secOf(k), x = p.kind === "MAINS" ? s.mains : s.pre; var n = paperQs(p).filter(function (q) { return q.s === k; }).length; return x ? Math.max(5, Math.round(x[2] * n / x[0])) : Math.max(5, Math.round(n * 0.6)); }
@@ -875,14 +877,14 @@ V["mockrun"] = function (pid) {
   if (!a || a.done || a.sec == null) { a = ST.att[pid] = { ans: {}, done: false, ts: Date.now(), sec: 0, end: 0 }; save(); }
   if (a.end && Date.now() - a.end > 2 * 36e5) a.end = 0;
   while (a.end && a.end <= Date.now() && a.sec < S.length) { var ended = a.end; a.sec++; a.i = 0; a.end = a.sec < S.length ? ended + secMins(p, S[a.sec]) * 60000 : 0; }
-  function finish() { a.done = true; a.ts = Date.now(); all.forEach(function (q) { logAnswer(q, a.ans[q.id]); }); lsSet("uc-state", JSON.stringify(ST)); location.hash = "#/mock/" + encodeURIComponent(pid) + "/result"; }
+  function finish() { a.done = true; a.ts = Date.now(); all.forEach(function (q) { logAnswer(q, a.ans[q.id]); }); lsSet("nc-state", JSON.stringify(ST)); location.hash = "#/mock/" + encodeURIComponent(pid) + "/result"; }
   if (a.sec >= S.length) { setTimeout(finish, 0); return '<div class="blank"><b>Time is up</b><p>Scoring your paper.</p></div>'; }
   var k = S[a.sec], qs = all.filter(function (q) { return q.s === k; });
   if (!a.end) a.end = Date.now() + secMins(p, k) * 60000;
   a.mk = a.mk || {}; a.vis = a.vis || {}; a.tq = a.tq || {}; save();
   var last = a.sec >= S.length - 1;
   return examHall({
-    qs: qs, kind: p.kind, title: p.label, sub: "UIIC AO · " + ({ PRE: "Prelims", MAINS: "Mains" }[p.kind] || "Practice set") + " · " + secOf(k).name + ", " + secMins(p, k) + " min", exit: "#/mock/" + encodeURIComponent(pid),
+    qs: qs, kind: p.kind, title: p.label, sub: "NICL AO · " + ({ PRE: "Phase I", MAINS: "Phase II" }[p.kind] || "Practice set") + " · " + secOf(k).name + ", " + secMins(p, k) + " min", exit: "#/mock/" + encodeURIComponent(pid),
     secTabs: S.length > 1 ? S.map(function (x, j) { return { short: secOf(x).short, st: j < a.sec ? "gone" : j === a.sec ? "on" : "next" }; }) : null,
     finLabel: last ? "Submit paper" : "Submit " + secOf(k).short,
     lockNote: last ? "This ends the paper and scores it, with a quarter of the marks taken off for each wrong answer." : "Once submitted you cannot come back to " + secOf(k).short + ". The next section starts its own clock.",
@@ -893,7 +895,7 @@ V["mockrun"] = function (pid) {
     timeOn: function (j) { return a.tq[qs[j].id] || 0; }, addTime: function (j, ms) { a.tq[qs[j].id] = (a.tq[qs[j].id] || 0) + ms; },
     startAt: function () { return a.i || 0; }, onMove: function (j) { a.i = j; save(); },
     deadline: function () { return a.end; },
-    submit: function () { if (last) return finish(); a.sec++; a.end = 0; a.i = 0; lsSet("uc-state", JSON.stringify(ST)); setTimeout(route, 0); }
+    submit: function () { if (last) return finish(); a.sec++; a.end = 0; a.i = 0; lsSet("nc-state", JSON.stringify(ST)); setTimeout(route, 0); }
   });
 };
 V["mockresult"] = function (pid) {
@@ -927,40 +929,43 @@ function tbl(cols, rows, cls) {
 }
 V["exam"] = function () {
   function chips(x) { return '<div class="ex-chips">' + x.topics.map(function (t) { return '<a href="' + learnHref(x.k, t.n) + '">' + h(t.n) + '</a>'; }).join("") + '</div>'; }
-  var PRE = secsOf("pre"), MN = D.secs.filter(function (s) { return s.mains; });
-  return '<section class="head"><span class="kicker reveal">UIIC Administrative Officer (Scale I) · Generalist · 2026</span>' +
+  var PRE = secsOf("pre"), GEN = { R: [50, 40], G: [50, 30], Q: [50, 40], E: [50, 40], C: [50, 30] };
+  var MN = ["R", "G", "Q", "E", "C", "A"].map(secOf);
+  return '<section class="head"><span class="kicker reveal">NICL Administrative Officer (Scale I) 2026 · Agriculture specialist</span>' +
       '<h1 class="page-h reveal">Exam pattern and syllabus.</h1>' +
-      '<p class="lede reveal">Everything from the official notice (Ref HO:HRM:REC:AO:1:2026, 7 September 2026) on one page: the two exams, every section and its clock, the marking, how selection works, and the syllabus with a link to the notes and videos for each topic.</p>' +
-      '<div class="ld-nav reveal">' + [["ex-dates", "Dates"], ["ex-sel", "Selection"], ["ex-pre", "Prelims"], ["ex-mains", "Mains"], ["ex-rules", "Marking rules"], ["ex-syl", "Syllabus"], ["ex-desc", "Descriptive"], ["ex-post", "Posts and eligibility"]].map(function (x) { return '<a href="#' + x[0] + '" data-jump="' + x[0] + '">' + x[1] + '</a>'; }).join("") + '<button class="btn quiet sm" data-print>Print</button></div></section>' +
+      '<p class="lede reveal">Everything from the official notice (National Insurance Company, dated 7 October 2026) on one page: both phases, every section and its clock, the marking, how selection works, and the syllabus with a link to the notes and videos for each topic.</p>' +
+      '<div class="ld-nav reveal">' + [["ex-dates", "Dates"], ["ex-sel", "Selection"], ["ex-pre", "Phase I"], ["ex-mains", "Phase II"], ["ex-rules", "Marking rules"], ["ex-syl", "Syllabus"], ["ex-desc", "Descriptive"], ["ex-post", "Posts and eligibility"]].map(function (x) { return '<a href="#' + x[0] + '" data-jump="' + x[0] + '">' + x[1] + '</a>'; }).join("") + '<button class="btn quiet sm" data-print>Print</button></div></section>' +
     '<section class="band" id="ex-dates"><h2 class="sec-h reveal">Dates</h2>' + tbl(["Stage", "Date"], [
-      ["Registration and fee", "Closed 28 September 2026"], ["<b>Tier I: Prelims</b>", "<b>Thursday 22 October 2026</b> (reporting time is on your call letter)"], ["Tier II: Mains", "30 November 2026 (tentative)"], ["Interview", "For those who clear Mains and the descriptive test"]]) + '</section>' +
+      ["Registration and fee", "8 to 28 October 2026 (closed)"], ["Print the application", "By 12 November 2026"], ["Call letters", "To be notified on nationalinsurance.nic.co.in"],
+      ["<b>Phase I: Preliminary</b>", "<b>Tuesday 17 November 2026</b>"], ["<b>Phase II: Main</b>", "<b>Tuesday 22 December 2026</b>"], ["Interview", "Not announced; for those who clear Phase II"]]) + '</section>' +
     '<section class="band" id="ex-sel"><h2 class="sec-h reveal">How you are selected</h2>' +
-      '<div class="stats reveal" style="margin-top:18px"><div class="stat"><div class="k">Prelims</div><div class="v">Screening</div><div class="s">100 marks. Clear every section and the overall cut-off; the marks are not counted later.</div></div>' +
-        '<div class="stat"><div class="k">Mains objective</div><div class="v">75%</div><div class="s">250 marks in five separately timed sections. This is the score that matters.</div></div>' +
-        '<div class="stat"><div class="k">Descriptive</div><div class="v">Qualifying</div><div class="s">Letter and essay, 30 marks. Must be cleared; not added to merit.</div></div>' +
-        '<div class="stat"><div class="k">Interview</div><div class="v">25%</div><div class="s">Final merit is Mains objective 75 : interview 25.</div></div></div></section>' +
-    '<section class="band" id="ex-pre"><h2 class="sec-h reveal">Tier I: Prelims · 22 October 2026</h2>' +
+      '<div class="stats reveal" style="margin-top:18px"><div class="stat"><div class="k">Phase I</div><div class="v">Screening</div><div class="s">100 marks. Clear every section; about 15 times the vacancies go through. Marks not counted later.</div></div>' +
+        '<div class="stat"><div class="k">Phase II objective</div><div class="v">80%</div><div class="s">250 marks in six separately timed sections, Agriculture 50 of them.</div></div>' +
+        '<div class="stat"><div class="k">Descriptive</div><div class="v">Qualifying</div><div class="s">Essay, précis, comprehension: 30 marks. Must be cleared; not added to merit.</div></div>' +
+        '<div class="stat"><div class="k">Interview</div><div class="v">20%</div><div class="s">With a minimum qualifying mark. Final merit is Phase II 80 : interview 20, then medical.</div></div></div></section>' +
+    '<section class="band" id="ex-pre"><h2 class="sec-h reveal">Phase I: Preliminary · 17 November 2026</h2>' +
       tbl(["Section", "Questions", "Marks", "Time"], PRE.map(function (s) { return [s.name, String(s.pre[0]), String(s.pre[1]), s.pre[2] + " min"]; }).concat([["<b>Total</b>", "<b>100</b>", "<b>100</b>", "<b>60 min</b>"]])) +
-      '<p class="muted reveal" style="margin-top:10px">Each section has its own 20-minute clock: time does not carry over and you cannot go back. Sections may come in any order. English is set in English; the others in English and Hindi.</p></section>' +
-    '<section class="band" id="ex-mains"><h2 class="sec-h reveal">Tier II: Mains · 30 November 2026</h2>' +
-      tbl(["Section", "Questions", "Marks", "Time", "Right / wrong"], MN.map(function (s) { return [s.name, String(s.mains[0]), String(s.mains[1]), s.mains[2] + " min", "+" + fmtM(s.mains[1] / s.mains[0]) + " / −" + fmtM(s.mains[1] / s.mains[0] / 4)]; })
-        .concat([["<b>Total objective</b>", "<b>200</b>", "<b>250</b>", "<b>150 min</b>", ""], ["Descriptive, typed: letter 10 + essay 20", "2", "30", "30 min", "straight after the objective test"]])) + '</section>' +
+      '<p class="muted reveal" style="margin-top:10px">The same paper for every discipline. Each section has its own 20-minute clock and its own cut-off; no agriculture in Phase I.</p></section>' +
+    '<section class="band" id="ex-mains"><h2 class="sec-h reveal">Phase II: Main · 22 December 2026</h2>' +
+      tbl(["Section", "Agriculture specialist", "(Generalist, for comparison)"], MN.map(function (s) { var g = GEN[s.k]; return [s.name, '<b>' + s.mains[0] + ' questions, ' + s.mains[2] + ' min</b>', g ? g[0] + ' questions, ' + g[1] + ' min' : '—']; })
+        .concat([["<b>Total objective</b>", "<b>250 marks, 180 min</b>", "250 marks, 180 min"], ["Descriptive, typed: essay 10 + précis 10 + comprehension 10", "30 marks, 30 min", "same"]])) +
+      '<p class="muted reveal" style="margin-top:10px">Every question carries 1 mark. Each section is separately timed. The descriptive test is typed straight after the objective test.</p></section>' +
     '<section class="band" id="ex-rules"><h2 class="sec-h reveal">Marking and cut-off rules</h2><div class="note reveal" style="margin-top:16px"><ul class="pts">' +
-      ["Prelims: 1 mark a question. A wrong answer loses a quarter of the question's marks (0.25); a blank loses nothing. The same quarter penalty applies in Mains.", 'There is a cut-off in <b>every section</b> and an overall cut-off in each category, in Prelims and again in Mains. One weak section can stop you, so never neglect a section.',
-       'Scores are equated across shifts to adjust for small differences in difficulty.', 'The descriptive answers are evaluated only for candidates who clear the Mains objective cut-offs.',
-       'Final merit: Mains objective marks and interview marks in the ratio 75:25. Prelims and descriptive marks are not added.', 'Answer patterns are compared across candidates; copied responses lead to cancellation.'].map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul></div></section>' +
+      ["A wrong answer loses a quarter of the question's marks (0.25); a blank loses nothing. Phase I and Phase II.", "A cut-off in <b>every section</b> and on the total, in both phases. One weak section can stop you.",
+       "Scores are equated across sessions.", "The descriptive answers are evaluated only for candidates who clear the Phase II objective cut-offs.",
+       "Final merit: Phase II objective marks and interview marks in the ratio 80:20. Ties go to the higher interview mark, then the older candidate.", "Last cycle's Phase II cut-off (2024, out of 250): Generalist UR 141; specialists 120 to 124. Agriculture is new, so it has no past cut-off."].map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul></div></section>' +
     '<section class="band" id="ex-syl"><h2 class="sec-h reveal">Syllabus, section by section</h2>' +
-      '<p class="muted reveal" style="margin-top:10px">The notice names the sections; these are the question types UIIC, NIACL and NICL AO papers set, the ones our notes cover. Tap a topic to open its notes and videos.</p>' +
+      '<p class="muted reveal" style="margin-top:10px">The notice names the sections only. These are the question types NICL and other insurance AO papers set, and for Agriculture the B.Sc. (Agri) syllabus that IBPS AFO Mains tests. Tap a topic to open its notes and videos.</p>' +
       D.secs.filter(function (x) { return x.k !== "D"; }).map(function (x) {
-        return '<div class="note ex-syl reveal t-' + x.tone + '"><div class="ex-sh"><h3>' + h(x.name) + '</h3><span class="tag' + (x.pre ? ' key' : '') + '">' + (x.pre ? 'Prelims ' + x.pre[0] + ' · Mains ' + x.mains[0] : 'Mains ' + x.mains[0] + ' questions') + '</span></div>' +
+        return '<div class="note ex-syl reveal t-' + x.tone + '"><div class="ex-sh"><h3>' + h(x.name) + '</h3><span class="tag' + (x.k === "A" ? ' key' : '') + '">' + (x.pre ? 'Phase I ' + x.pre[0] + ' · Phase II ' + x.mains[0] : 'Phase II ' + x.mains[0] + ' questions') + '</span></div>' +
           (x.official ? '<p class="ex-off">' + h(x.official) + '</p>' : '') + chips(x) + '<a class="ex-go" href="#/practice/' + x.k + '">Practise ' + secQs(x.k).length + ' questions' + arr() + '</a></div>'; }).join("") + '</section>' +
     '<section class="band" id="ex-desc"><h2 class="sec-h reveal">Descriptive English</h2><div class="note reveal" style="margin-top:16px"><ul class="pts">' +
-      '<li>Typed on the computer straight after the Mains objective test: a letter (10 marks) and an essay (20 marks) in 30 minutes.</li><li>It must be cleared, but it is not added to the final merit.</li></ul>' +
-      '<a class="ex-go" href="#/learn/D">Letter and essay notes' + arr() + '</a></div></section>' +
+      '<li>Typed online straight after the Phase II objective test: an essay (10 marks), a précis (10) and a comprehension (10), in 30 minutes.</li><li>It must be cleared, but it is not added to the final merit.</li></ul>' +
+      '<a class="ex-go" href="#/learn/D">Essay, précis and comprehension notes' + arr() + '</a></div></section>' +
     '<section class="band" id="ex-post"><h2 class="sec-h reveal">Posts and eligibility</h2>' +
-      tbl(["", "Generalist"], [["Vacancies", "200 (provisional), mostly in the Western and Southern zones"], ["Qualification", "A degree or post-graduate degree in any discipline with at least 60% (55% for SC, ST and PwBD), completed by 30 June 2026"],
-        ["Age", "21 to 30 as on 30 June 2026 (SC and ST +5, OBC +3, PwBD +10)"], ["Penalty", "One quarter of the marks for each wrong answer, Prelims and Mains"], ["Final merit", "Mains objective 75 : interview 25"]]) +
-      '<p class="muted reveal" style="margin-top:10px">Source: UIIC notice for Administrative Officers (Scale I), Generalists and Hindi Officers, 2026. Check your call letter for the reporting time, documents and venue.</p></section>' + foot();
+      tbl(["", "Agriculture specialist"], [["Vacancies", "20 of 321 (UR 9, OBC 5, SC 3, ST 1, EWS 2). 200 Generalist, 121 Specialist in all."], ["Qualification", "Graduate (4 years) or post-graduate in Agriculture, Agricultural Biotechnology or Agricultural Engineering, with at least 60% (55% for SC, ST and PwBD), held on 1 October 2026"],
+        ["Age", "21 to 30 as on 1 October 2026 (born 2 October 1996 to 1 October 2005); SC and ST +5, OBC +3, PwBD +10"], ["One discipline", "A candidate can apply for one discipline only"], ["Final merit", "Phase II objective 80 : interview 20"]]) +
+      '<p class="muted reveal" style="margin-top:10px">Source: NICL recruitment of Administrative Officers (Scale I) 2026-27, nationalinsurance.nic.co.in. Check your call letter for the reporting time and venue.</p></section>' + foot();
 };
 
 /* ── videos: strategy, insurance, current affairs, and every topic's classes ── */
@@ -970,7 +975,7 @@ V["videos"] = function () {
   return '<section class="head"><span class="kicker reveal">' + n + ' classes, each checked to be live</span><h1 class="page-h reveal">Videos.</h1>' +
       '<p class="lede reveal">The best free classes we found for every topic, best first. Tap one to play it here. Each topic page also has its own classes under Watch.</p>' +
       '<div class="ld-nav reveal">' + [["v-strat", "Strategy"], ["v-ins", "Insurance"], ["v-ca", "Current affairs"]].concat(D.secs.map(function (x) { return ["v-" + x.k, x.short]; })).map(function (x) { return '<a href="#' + x[0] + '" data-jump="' + x[0] + '">' + h(x[1]) + '</a>'; }).join("") + '</div></section>' +
-    band("v-strat", "Strategy and exam analysis", "UIIC AO 2026 pattern, and what NIACL, NICL and UIIC papers asked.", VD._strategy) +
+    band("v-strat", "Strategy and exam analysis", "NICL AO 2026 strategy, and what NICL, NIACL and UIIC papers asked.", VD._strategy) +
     band("v-ins", "Insurance awareness", "For Mains GA: insurance basics, IRDAI and the 2026 insurance news.", VD._insurance) +
     band("v-ca", "Current affairs, month by month", "For Mains GA: April to October 2026.", VD._ca) +
     D.secs.map(function (x) {
@@ -1006,7 +1011,7 @@ V["progress"] = function () {
 /* ── more ── */
 V["more"] = function () {
   var L = [["#/exam", "Exam pattern and syllabus", "Every paper, the marking, selection and the full syllabus"], ["#/plan", "The plan", "Day by day to Prelims on 22 October"], ["#/videos", "Videos", "The best classes for every topic, plus strategy, insurance and current affairs"], ["#/lastday", "Last-day sheet", "Every topic on one page"], ["#/errors", "Error log", (errList().length || "No") + " questions to clear"],
-    ["#/practice/pyq", "Every past-paper question", "UIIC, NIACL and NICL AO, with reasons"], ["#/progress", "Progress", "Mock scores and accuracy by subject"], ["#/sources", "Sources", "Where the notes and facts come from"]];
+    ["#/practice/pyq", "Every past-paper question", "NICL, UIIC, NIACL AO and IBPS AFO, with reasons"], ["#/progress", "Progress", "Mock scores and accuracy by subject"], ["#/sources", "Sources", "Where the notes and facts come from"]];
   return '<section class="head"><h1 class="page-h reveal">More.</h1></section><div class="list reveal">' + L.map(function (x) {
     return '<a class="item" href="' + x[0] + '" style="grid-template-columns:minmax(0,1fr) auto;align-items:center"><span><span class="t">' + h(x[1]) + '</span><span class="d">' + h(x[2]) + '</span></span><span class="end">' + arr() + '</span></a>';
   }).join("") + '</div>' + foot();
@@ -1027,8 +1032,8 @@ function gate(msg) {
 var main = document.getElementById("main"), asideEl = document.getElementById("aside"), shell = document.getElementById("shell");
 var asideHTML = "";
 function setAside(x) { asideHTML = x || ""; }
-function readScale() { return Math.max(0.9, Math.min(1.5, parseFloat(lsGet("uc-rs", 1)) || 1)); }
-function setReadScale(v) { v = Math.round(Math.max(0.9, Math.min(1.5, v)) * 10) / 10; document.documentElement.style.setProperty("--rs", v); lsSet("uc-rs", v); }
+function readScale() { return Math.max(0.9, Math.min(1.5, parseFloat(lsGet("nc-rs", 1)) || 1)); }
+function setReadScale(v) { v = Math.round(Math.max(0.9, Math.min(1.5, v)) * 10) / 10; document.documentElement.style.setProperty("--rs", v); lsSet("nc-rs", v); }
 document.documentElement.style.setProperty("--rs", readScale());
 window.addEventListener("scroll", function () { var p = el("#tprog"); if (!p) return; var d = document.documentElement, max = d.scrollHeight - innerHeight; p.style.transform = "scaleX(" + (max > 0 ? Math.min(1, scrollY / max) : 0) + ")"; }, { passive: true });
 
@@ -1093,19 +1098,19 @@ function wire() {
   els("[data-rs]").forEach(function (b) { b.addEventListener("click", function () {
     if (b.dataset.rs === "cycle") { var r = readScale(); setReadScale(r >= 1.3 ? 0.9 : r < 1 ? 1 : r < 1.15 ? 1.15 : 1.3); } else setReadScale(readScale() + (+b.dataset.rs) * 0.1);
   }); });
-  var w = el("#wipe"); if (w) w.addEventListener("click", function () { if (!confirm("Erase every answer, mock and ticked task in this browser? This cannot be undone.")) return; ST = fresh(); lsSet("uc-state", JSON.stringify(ST)); route(); });
+  var w = el("#wipe"); if (w) w.addEventListener("click", function () { if (!confirm("Erase every answer, mock and ticked task in this browser? This cannot be undone.")) return; ST = fresh(); lsSet("nc-state", JSON.stringify(ST)); route(); });
 }
 
 /* ── rail and theme ── */
 (function () {
   var b = document.getElementById("railToggle");
-  function set(mini) { document.body.classList.toggle("rail-mini", mini); if (b) { b.setAttribute("aria-expanded", String(!mini)); b.setAttribute("aria-label", mini ? "Expand sidebar" : "Collapse sidebar"); } lsSet("uc-rail", mini ? "mini" : ""); }
-  set(lsGet("uc-rail", "") === "mini");
+  function set(mini) { document.body.classList.toggle("rail-mini", mini); if (b) { b.setAttribute("aria-expanded", String(!mini)); b.setAttribute("aria-label", mini ? "Expand sidebar" : "Collapse sidebar"); } lsSet("nc-rail", mini ? "mini" : ""); }
+  set(lsGet("nc-rail", "") === "mini");
   if (b) b.addEventListener("click", function () { set(!document.body.classList.contains("rail-mini")); });
-  var t = lsGet("uc-theme", ""); if (t) document.documentElement.setAttribute("data-theme", t);
+  var t = lsGet("nc-theme", ""); if (t) document.documentElement.setAttribute("data-theme", t);
   function toggle() {
     var cur = document.documentElement.getAttribute("data-theme"), dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme:dark)").matches, next = dark ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next); lsSet("uc-theme", next);
+    document.documentElement.setAttribute("data-theme", next); lsSet("nc-theme", next);
   }
   ["theme", "theme2"].forEach(function (id) { var x = document.getElementById(id); if (x) x.addEventListener("click", toggle); });
 })();
@@ -1114,7 +1119,7 @@ window.addEventListener("hashchange", function () { if (/key=/.test(location.has
 function start() {
   loadData().then(route).catch(function (e) {
     var boot = document.getElementById("boot"); if (boot) boot.remove();
-    if (e.message === "badkey") { try { localStorage.removeItem("uc-key"); } catch (x) {} }
+    if (e.message === "badkey") { try { localStorage.removeItem("nc-key"); } catch (x) {} }
     main.innerHTML = gate(e.message);
   });
 }

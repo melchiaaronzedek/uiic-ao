@@ -1,4 +1,4 @@
-/* UIIC AO Compass additions to the shared CGL Compass styles */
+/* NICL AO Compass additions to the shared CGL Compass styles */
 .tbar .tb-tt{flex:1;min-width:0;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
 .why .why-n{display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none}
 .ld-nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
