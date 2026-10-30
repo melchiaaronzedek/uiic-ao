@@ -10,7 +10,7 @@
 
 var EXAM = new Date(2026, 10, 17, 9, 0, 0);      // Phase I (Prelims), Tuesday 17 November 2026
 var MAINS = new Date(2026, 11, 22, 9, 0, 0);     // Phase II (Mains), Tuesday 22 December 2026
-var VER = "82fd52309b";
+var VER = "9cb435a802";
 var BRAND = "NICL AO Compass";
 
 /* ── helpers ── */
